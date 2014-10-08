@@ -6,6 +6,8 @@ import biplist
 import socket
 from Crypto.Cipher import AES
 
+import MirroringPackets
+
 class MirrorHandler(server.AirPlayHandler):
 	server_version = "AirTunes/150.33"
 	sys_version = ""
@@ -42,9 +44,10 @@ class MirrorHandler(server.AirPlayHandler):
 
 	def parseStreamPacket(self):
 		try:
-			header = self.rfile.read(128)
-			print "Read header: ", repr(header)
-			# Todo: Get payload size and parse
+			packet = MirroringPackets.readNext(self.rfile)
+			if isinstance(packet, MirroringPackets.CodecData):
+				print "Got new codec data", packet.__dict__
+				self.latestCodecData = packet
 		except socket.timeout, e:
 			self.log_error("Request timed out: %r", e)
 			self.close_connection = 1
