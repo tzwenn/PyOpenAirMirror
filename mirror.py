@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-import server
-import fply
 import biplist
 import socket
-from Crypto.Cipher import AES
 
+import fply
+import server
+import Cryptor
 import MirroringPackets
 
 class MirrorHandler(server.AirPlayHandler):
@@ -36,7 +36,9 @@ class MirrorHandler(server.AirPlayHandler):
 		self.streamInfo = biplist.readPlistFromString(self.readBody())
 		aesKey = fply.decrypt(self.streamInfo['param1'])
 		aesIV = self.streamInfo['param2']
-		self.cryptor = AES.new(aesKey, mode=AES.MODE_CBC, IV=aesIV)
+		self.cryptor = Cryptor.Cryptor(aesKey, aesIV)
+
+		self.outfile = open("out.dump", "w")
 
 		self.log_message("Get Stream info: %r", self.streamInfo)
 		self.log_message("Switching to stream packet mode")
@@ -45,13 +47,20 @@ class MirrorHandler(server.AirPlayHandler):
 	def parseStreamPacket(self):
 		try:
 			packet = MirroringPackets.readNext(self.rfile)
+			if packet is None:
+				self.close_connection = 1
+				return
+
 			if isinstance(packet, MirroringPackets.CodecData):
-				print "Got new codec data", packet.__dict__
 				self.latestCodecData = packet
+				self.outfile.write(packet.data)
+
+			if isinstance(packet, MirroringPackets.Video):
+				self.outfile.write(self.cryptor.decrypt(packet.bitstream))
+
 		except socket.timeout, e:
 			self.log_error("Request timed out: %r", e)
 			self.close_connection = 1
-			return
 
 	def sendCapabilities(self):
 		self.log_message("Sending capabilities")

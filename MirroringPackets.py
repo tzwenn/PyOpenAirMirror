@@ -54,9 +54,10 @@ class CodecData(Packet):
 				self.PPSNum, self.PPSLength, self.pictureParamSet = \
 							struct.unpack(self.codecFmt, rawdata[:self.codecSize])
 		self.reservedBits1 = pack1 >> 2
-		self.NALunits = pack1 & 0x3
+		self.NALULengthSizeMinusOne = pack1 & 0x3
 		self.reservedBits2 = pack2 >> 5
 		self.SPSNum = pack2 & 0x1f
+		self.data = rawdata
 
 		# TODO: In Portrait orientation I received 32 bytes
 		# Check what changed and put note in doc
@@ -77,7 +78,10 @@ _classByType = {
 }
 
 def readNext(fd):
-	header = Header(fd.read(Header.nBytes))
+	headerData = fd.read(Header.nBytes)
+	if len(headerData) == 0:
+		return None
+	header = Header(headerData)
 	cls = _classByType.get(header.payloadType, Packet)
 	return cls(fd.read(header.payloadSize), header)
 
