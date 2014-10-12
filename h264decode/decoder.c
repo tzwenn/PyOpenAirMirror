@@ -1,5 +1,10 @@
 #include <Python.h>
 #include <libavcodec/avcodec.h>
+#include <libavutil/mem.h>
+
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(55,28,1)
+#define av_frame_alloc  avcodec_alloc_frame
+#endif
 
 extern AVCodec *h264decoder_h264Codec; // defined in h264decode.c
 extern PyObject *h264decode_YUVFrame_from_AVPicture(AVFrame *picture);
