@@ -34,11 +34,13 @@ class MirrorHandler(server.AirPlayHandler):
 
 	def receiveStream(self):
 		self.streamInfo = biplist.readPlistFromString(self.readBody())
-		aesKey = fply.decrypt(self.streamInfo['param1'])
-		aesIV = self.streamInfo['param2']
-		self.cryptor = Cryptor.Cryptor(aesKey, aesIV)
-
-		self.outfile = open("out.dump", "w")
+		if 'param1' in self.streamInfo and 'param2' in self.streamInfo:
+			aesKey = fply.decrypt(self.streamInfo['param1'])
+			aesIV = self.streamInfo['param2']
+			self.cryptor = Cryptor.Cryptor(aesKey, aesIV)
+		else:
+			self.log_message("Client doesn't want to encrypt stream. Skipping AES")
+			self.cryptor = Cryptor.EchoCryptor()
 
 		self.log_message("Get Stream info: %r", self.streamInfo)
 		self.log_message("Switching to stream packet mode")
@@ -53,10 +55,9 @@ class MirrorHandler(server.AirPlayHandler):
 
 			if isinstance(packet, MirroringPackets.CodecData):
 				self.latestCodecData = packet
-				self.outfile.write(packet.data)
 
 			if isinstance(packet, MirroringPackets.Video):
-				self.outfile.write(self.cryptor.decrypt(packet.bitstream))
+				pass
 
 		except socket.timeout, e:
 			self.log_error("Request timed out: %r", e)

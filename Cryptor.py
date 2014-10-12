@@ -15,3 +15,7 @@ class Cryptor(object):
 		self.buf = self.buf[blocksEnd:]
 		return data
 
+class EchoCryptor(object):
+
+	def decrypt(self, data):
+		return data
