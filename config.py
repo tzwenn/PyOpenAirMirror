@@ -1,5 +1,6 @@
 server_version = "AirTunes/150.33"
 service_name = "OpenAirMirror"
+window_caption = service_name
 
 default_capabilities = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
