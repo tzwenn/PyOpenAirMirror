@@ -73,7 +73,8 @@ class MirrorHandler(server.AirPlayHandler):
 
 			if isinstance(packet, MirroringPackets.Video):
 				decrypted = self.cryptor.decrypt(packet.bitstream)
-				self.decodeAndDisplayFrame(decrypted)
+				if decrypted:
+					self.decodeAndDisplayFrame(decrypted)
 
 		except socket.timeout, e:
 			self.log_error("Request timed out: %r", e)

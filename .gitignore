@@ -1,4 +1,6 @@
 *.pyc
+*.mp4
+*.yuv
 *.so
 *.dump
 test/
