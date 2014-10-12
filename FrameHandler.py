@@ -17,7 +17,7 @@ class FrameHandler(object):
 		self.finish()
 
 	def sessionName(self):
-		return str(self.streamInfo.get('deviceID', 'Unknown client'))
+		return str(self.streamInfo.get('deviceID', 'UnknownClient'))
 
 	def start(self):
 		""" Called on initialization. Reimplement in subclass if needed """
@@ -91,11 +91,11 @@ class SDLRenderer(FrameHandler):
 			self.setupWindow(frame)
 
 		# No idea why I need to keep that, but otherwise overlay.display crashes
-		dummyBufBecauseItSucks = frame.y + frame.u + frame.v
+		dummyBufBecauseItSucks = "%s%s%s" % (frame.y, frame.u, frame.v)
 		self.overlay.display((frame.y, frame.u, frame.v))
 		dummyBufBecauseItSucks = ""
 		pygame.event.get()
-		#self.clock.tick(5)
+		self.clock.tick(10)
 
 	def finish(self):
 		pygame.display.quit()
