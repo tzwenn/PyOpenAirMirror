@@ -2,8 +2,6 @@
 
 import biplist
 import socket
-import itertools
-import datetime
 
 import fply
 import h264decode
@@ -11,10 +9,9 @@ import register
 import server
 import Cryptor
 import MirroringPacket
+import FrameHandler
 
 import config
-
-splitEveryNChars = lambda s, n: (s[i:i+n] for i in xrange(0, len(s), n))
 
 class MirrorHandler(server.AirPlayHandler):
 	server_version = config.server_version
@@ -50,20 +47,15 @@ class MirrorHandler(server.AirPlayHandler):
 			self.log_message("Client doesn't want to encrypt stream. Skipping AES")
 			self.cryptor = Cryptor.EchoCryptor()
 
-		self.decoder = None
+		self.handler = None
 		self.log_message("Get Stream info: %r", self.streamInfo)
 		self.log_message("Switching to stream packet mode")
 		self.handle_one_request = self.parseStreamPacket
-		
-		filename = datetime.datetime.now().strftime("%y%m%d_%H%M%S_%%s.yuv") \
-				% str(self.streamInfo.get('deviceID', 'Unknown client'))
-		self.outfile = open(filename, "w")
-
 
 	def closeConnection(self):
 		self.log_message("Closing connection")
 		self.close_connection = 1
-		self.outfile.close()
+		self.frameHandler = None
 
 	def parseStreamPacket(self):
 		try:
@@ -75,32 +67,17 @@ class MirrorHandler(server.AirPlayHandler):
 		except socket.timeout, e:
 			self.log_error("Request timed out: %r", e)
 			return self.closeConnection()
+		self.handlePacket(packet)
 
+	def handlePacket(self, packet):
 		if packet.payloadType == MirroringPacket.TYPE_VIDEO:
-			decrypted = self.cryptor.decrypt(packet.data)
-			if decrypted:
-				self.decodeAndDisplayFrame(decrypted)
+			decryptedH264Packet = self.cryptor.decrypt(packet.data)
+			if decryptedH264Packet and self.frameHandler is not None:
+				self.frameHandler.handle(self.decoder.decodeFrame(decryptedH264Packet))
 
-		if packet.payloadType == MirroringPacket.TYPE_CODECDATA:
+		elif packet.payloadType == MirroringPacket.TYPE_CODECDATA:
 			self.decoder = h264decode.Decoder(packet.data)
-
-	
-	def decodeAndDisplayFrame(self, h264Packet):
-		if self.decoder is None:
-			return
-
-		frame = self.decoder.decodeFrame(h264Packet)
-		try:
-			width, height, ((yLineSkip, yData), (uLineSkip, uData), (vLineSkip, vData)) = frame
-		except TypeError:
-			return
-
-		for line in splitEveryNChars(yData, yLineSkip):
-			self.outfile.write(line[:width])
-		
-		for line in itertools.chain(splitEveryNChars(uData, uLineSkip), \
-		                            splitEveryNChars(vData, vLineSkip)):
-			self.outfile.write(line[:width / 2])
+			self.frameHandler = FrameHandler.YUVFileStorage(self.streamInfo)
 
 	def sendCapabilities(self):
 		self.log_message("Sending capabilities")
