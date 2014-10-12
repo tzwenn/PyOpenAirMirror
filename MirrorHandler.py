@@ -2,8 +2,15 @@
 
 import biplist
 import socket
+import sys
 
-import fply
+try:
+	import fply
+except ImportError:
+	sys.stderr.write("!! Cannot find binary fairplay module, fallback to dummy\n")
+	sys.stderr.write("!! Most clients will refuse to connect\n")
+	import dummyFPLY as fply
+
 import h264decode
 import register
 import server
