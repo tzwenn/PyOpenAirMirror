@@ -110,6 +110,9 @@ class SDLRenderer(FrameHandler):
 		pygame.event.get()
 		#self.clock.tick(10)
 
+	def finish(self):
+		pygame.display.quit()
+
 	def setupWindow(self, frame):
 		self.window = pygame.display.set_mode((frame.width, frame.height))
 		self.overlay = pygame.Overlay(pygame.YV12_OVERLAY, (frame.width, frame.height))
