@@ -1,9 +1,8 @@
 #include <Python.h>
+#include <structmember.h>
 #include <libavcodec/avcodec.h>
 
 static AVCodec *h264Codec;
-
-/////////////////////////
 
 typedef struct {
 	PyObject_HEAD
@@ -39,6 +38,7 @@ static void Decoder_dealloc(h264decode_DecoderObject *self)
 	if (self->avccData) {
 		free(self->avccData);
 	}
+    self->ob_type->tp_free((PyObject*)self);	
 }
 
 static int Decoder_init(h264decode_DecoderObject *self, PyObject *args, PyObject *kwds)
@@ -181,10 +181,11 @@ static PyTypeObject h264decode_DecoderType = {
 	Decoder_new,               /* tp_new */
 };
 
-
 static PyMethodDef h264decode_methods[] = {
 	{NULL, NULL, 0, NULL}
 };
+
+extern PyTypeObject h264decode_YUVFrameType;
 
 #ifndef PyMODINIT_FUNC
 #define PyMODINIT_FUNC void
@@ -198,15 +199,20 @@ PyMODINIT_FUNC inith264decode(void)
 		return;
 	}
 
-	PyObject *m;
-	
 	if (PyType_Ready(&h264decode_DecoderType) < 0)
 		return;
 
-	m = Py_InitModule("h264decode", h264decode_methods);
-	if (!m)
+	if (PyType_Ready(&h264decode_YUVFrameType) < 0)
+		return;
+
+	PyObject *module = Py_InitModule3("h264decode", h264decode_methods,
+			"A simple wrapper around libavcodec to decode complete H.264 packets to YUV420p frames");
+	if (!module)
 		return;
 
     Py_INCREF(&h264decode_DecoderType);
-	PyModule_AddObject(m, "Decoder", (PyObject *)&h264decode_DecoderType);
+	PyModule_AddObject(module, "Decoder", (PyObject *)&h264decode_DecoderType);
+
+    Py_INCREF(&h264decode_YUVFrameType);
+	PyModule_AddObject(module, "YUVFrame", (PyObject *)&h264decode_YUVFrameType);
 }
