@@ -122,7 +122,11 @@ static PyObject *Decoder_decodeFrame(h264decode_DecoderObject *self, PyObject *a
 
 	PyObject *res = NULL;
 	if (got_picture) {
-		res = Py_BuildValue("s#i", self->picture->data[0], self->codec_context->width * self->picture->linesize[0], self->picture->linesize[0]);
+		res = Py_BuildValue("ii((is#)(is#)(is#))", 
+				self->picture->width, self->picture->height,
+				self->picture->linesize[0], self->picture->data[0], self->picture->height * self->picture->linesize[0],
+				self->picture->linesize[1], self->picture->data[1], self->picture->height / 2 * self->picture->linesize[1],
+				self->picture->linesize[2], self->picture->data[2], self->picture->height / 2 * self->picture->linesize[2]);
 	}
 	free(paddedData);
 	return res ? res : Py_BuildValue("");

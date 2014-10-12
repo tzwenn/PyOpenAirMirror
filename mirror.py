@@ -2,11 +2,16 @@
 
 import biplist
 import socket
+import itertools
+import datetime
 
 import fply
+import h264decode
 import server
 import Cryptor
 import MirroringPackets
+
+splitEveryNChars = lambda s, n: (s[i:i+n] for i in xrange(0, len(s), n))
 
 class MirrorHandler(server.AirPlayHandler):
 	server_version = "AirTunes/150.33"
@@ -42,26 +47,54 @@ class MirrorHandler(server.AirPlayHandler):
 			self.log_message("Client doesn't want to encrypt stream. Skipping AES")
 			self.cryptor = Cryptor.EchoCryptor()
 
+		self.decoder = None
 		self.log_message("Get Stream info: %r", self.streamInfo)
 		self.log_message("Switching to stream packet mode")
 		self.handle_one_request = self.parseStreamPacket
+		
+		filename = datetime.datetime.now().strftime("%y%m%d_%H%M%S_%%s.yuv") \
+				% str(self.streamInfo.get('deviceID', 'Unknown client'))
+		self.outfile = open(filename, "w")
+
+
+	def closeConnection(self):
+		self.log_message("Closing connection")
+		self.close_connection = 1
+		self.outfile.close()
 
 	def parseStreamPacket(self):
 		try:
 			packet = MirroringPackets.readNext(self.rfile)
 			if packet is None:
-				self.close_connection = 1
-				return
+				return self.closeConnection()
 
 			if isinstance(packet, MirroringPackets.CodecData):
-				self.latestCodecData = packet
+				self.decoder = h264decode.Decoder(packet.data)
 
 			if isinstance(packet, MirroringPackets.Video):
-				pass
+				decrypted = self.cryptor.decrypt(packet.bitstream)
+				self.decodeAndDisplayFrame(decrypted)
 
 		except socket.timeout, e:
 			self.log_error("Request timed out: %r", e)
-			self.close_connection = 1
+			self.closeConnection()
+	
+	def decodeAndDisplayFrame(self, h264Packet):
+		if self.decoder is None:
+			return
+
+		frame = self.decoder.decodeFrame(h264Packet)
+		try:
+			width, height, ((yLineSkip, yData), (uLineSkip, uData), (vLineSkip, vData)) = frame
+		except TypeError:
+			return
+
+		for line in splitEveryNChars(yData, yLineSkip):
+			self.outfile.write(line[:width])
+		
+		for line in itertools.chain(splitEveryNChars(uData, uLineSkip), \
+		                            splitEveryNChars(vData, vLineSkip)):
+			self.outfile.write(line[:width / 2])
 
 	def sendCapabilities(self):
 		self.log_message("Sending capabilities")
