@@ -106,13 +106,11 @@ class MirrorHandler(server.AirPlayHandler):
 		self.log_message("Sending capabilities")
 		self.sendPList(config.default_capabilities)
 
-if __name__ == "__main__":
-	import register
-	import threading
-	import sys
-	serviceName = sys.argv[1] if len(sys.argv) > 1 else config.service_name
-	register_thread = threading.Thread(target=register.registerAirPlay, args=[serviceName])
-	register_thread.setDaemon(True)
-	register_thread.start()
+def runServer():
+	try:
+		server.runServer(7100, MirrorHandler)
+	except KeyboardInterrupt:
+		pass
 
-	server.main(7100, MirrorHandler)
+if __name__ == "__main__":
+	runServer()
