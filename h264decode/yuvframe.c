@@ -1,5 +1,6 @@
 #include <Python.h>
 #include <structmember.h>
+#include <libavcodec/avcodec.h>
 
 typedef struct {
 	PyObject_HEAD
@@ -52,12 +53,31 @@ static int YUVFrame_init(h264decode_YUVFrame *self, PyObject *args, PyObject *kw
 	return 0;
 }
 
+static int YUVFrame_traverse(h264decode_YUVFrame *self, visitproc visit, void *arg)
+{
+	Py_VISIT(self->yData);
+	Py_VISIT(self->uData);
+	Py_VISIT(self->vData);
+	return 0;
+}
+
+static int YUVFrame_clear(h264decode_YUVFrame *self)
+{
+	Py_CLEAR(self->yData);
+	Py_CLEAR(self->uData);
+	Py_CLEAR(self->vData);
+	return 0;
+}
+
 static void YUVFrame_dealloc(h264decode_YUVFrame *self)
 {
-	Py_XDECREF(self->yData);
-	Py_XDECREF(self->uData);
-	Py_XDECREF(self->vData);
-    self->ob_type->tp_free((PyObject*)self);	
+	YUVFrame_clear(self);
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+static PyObject *YUVFrame_str(h264decode_YUVFrame *self)
+{
+	return PyString_FromFormat("h264decode.YUVFrame{%dx%d pixels}", self->width, self->height);
 }
 
 static PyMemberDef YUVFrame_members[] = {
@@ -73,7 +93,7 @@ static PyMemberDef YUVFrame_members[] = {
 };
 
 static PyMethodDef YUVFrame_methods[] = {
-	{NULL, NULL, 0, NULL}	
+	{NULL, NULL, 0, NULL}
 };
 
 PyTypeObject h264decode_YUVFrameType = {
@@ -93,14 +113,14 @@ PyTypeObject h264decode_YUVFrameType = {
     0,                         /*tp_as_mapping*/
     0,                         /*tp_hash */
     0,                         /*tp_call*/
-    0,                         /*tp_str*/
+    (reprfunc)YUVFrame_str,    /*tp_str*/
     0,                         /*tp_getattro*/
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC, /*tp_flags*/
     "A YUV420p frame as returned by x264 decoder in ffmpeg",           /* tp_doc */
-    0,		               /* tp_traverse */
-    0,		               /* tp_clear */
+    (traverseproc)YUVFrame_traverse,       /* tp_traverse */
+    (inquiry)YUVFrame_clear,  /* tp_clear */
     0,		               /* tp_richcompare */
     0,		               /* tp_weaklistoffset */
     0,		               /* tp_iter */
@@ -118,3 +138,37 @@ PyTypeObject h264decode_YUVFrameType = {
     YUVFrame_new,              /* tp_new */
 };
 
+PyObject *h264decode_YUVFrame_from_AVPicture(AVFrame *picture)
+{
+	h264decode_YUVFrame *self = (h264decode_YUVFrame *)
+					PyObject_CallObject((PyObject *) &h264decode_YUVFrameType, NULL);
+
+	self->width = picture->width;
+	self->height = picture->height;
+	self->yLineSkip = picture->linesize[0];
+	self->uLineSkip = picture->linesize[1];
+	self->vLineSkip = picture->linesize[2];
+
+	Py_CLEAR(self->yData);
+	self->yData = Py_BuildValue("s#", picture->data[0], picture->height * picture->linesize[0]);
+	if (!self->yData) {
+		Py_DECREF(self);
+		return NULL;
+	}
+
+	Py_CLEAR(self->uData);
+	self->uData = Py_BuildValue("s#", picture->data[1], picture->height / 2 * picture->linesize[1]);
+	if (!self->uData) {
+		Py_DECREF(self);
+		return NULL;
+	}
+
+	Py_CLEAR(self->vData);
+	self->vData = Py_BuildValue("s#", picture->data[2], picture->height / 2 * picture->linesize[2]);
+	if (!self->vData) {
+		Py_DECREF(self);
+		return NULL;
+	}
+
+	return (PyObject  *)self;
+}

@@ -15,11 +15,8 @@ class FrameHandler(object):
 		self.finish()
 
 	def handle(self, frame):
-		try:
-			width, height, ((yLineSkip, yData), (uLineSkip, uData), (vLineSkip, vData)) = frame
-		except TypeError:
-			return
-		self.handleFrameData(width, height, yLineSkip, yData, uLineSkip, uData, vLineSkip, vData)
+		""" What should I do with this frame. Please reimplement """
+		pass
 
 	def start(self):
 		""" Called on initialization. Reimplement in subclass if needed """
@@ -27,10 +24,6 @@ class FrameHandler(object):
 
 	def finish(self):
 		""" Called when the session was finished """
-		pass
-
-	def handleFrameData(self, width, height, yLineSkip, yData, uLineSkip, uData, vLineSkip, vData):
-		""" What should I do with this frame. Please reimplement """
 		pass
 
 class YUVFileStorage(FrameHandler):
@@ -52,11 +45,11 @@ class YUVFileStorage(FrameHandler):
 	def finish(self):
 		self.outfile.close()
 
-	def handleFrameData(self, width, height, yLineSkip, yData, uLineSkip, uData, vLineSkip, vData):
-		for line in self.splitEveryNChars(yData, yLineSkip):
-			self.outfile.write(line[:width])
+	def handle(self, frame):
+		for line in self.splitEveryNChars(frame.yData, frame.yLineSkip):
+			self.outfile.write(line[:frame.width])
 		
-		for line in itertools.chain(self.splitEveryNChars(uData, uLineSkip), \
-		                            self.splitEveryNChars(vData, vLineSkip)):
-			self.outfile.write(line[:width / 2])
+		for line in itertools.chain(self.splitEveryNChars(frame.uData, frame.uLineSkip), \
+		                            self.splitEveryNChars(frame.vData, frame.vLineSkip)):
+			self.outfile.write(line[:frame.width / 2])
 				

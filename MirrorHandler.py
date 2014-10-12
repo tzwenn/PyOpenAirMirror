@@ -79,8 +79,9 @@ class MirrorHandler(server.AirPlayHandler):
 	def handlePacket(self, packet):
 		if packet.payloadType == MirroringPacket.TYPE_VIDEO:
 			decryptedH264Packet = self.cryptor.decrypt(packet.data)
-			if decryptedH264Packet and self.frameHandler is not None:
-				self.frameHandler.handle(self.decoder.decodeFrame(decryptedH264Packet))
+			frame = self.decoder.decodeFrame(decryptedH264Packet)
+			if frame and self.frameHandler is not None:
+				self.frameHandler.handle(frame)
 
 		elif packet.payloadType == MirroringPacket.TYPE_CODECDATA:
 			self.decoder = h264decode.Decoder(packet.data)
