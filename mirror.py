@@ -12,10 +12,12 @@ import server
 import Cryptor
 import MirroringPacket
 
+import config
+
 splitEveryNChars = lambda s, n: (s[i:i+n] for i in xrange(0, len(s), n))
 
 class MirrorHandler(server.AirPlayHandler):
-	server_version = "AirTunes/150.33"
+	server_version = config.server_version
 	sys_version = ""
 	protocol_version = "HTTP/1.1"
 
@@ -102,29 +104,13 @@ class MirrorHandler(server.AirPlayHandler):
 
 	def sendCapabilities(self):
 		self.log_message("Sending capabilities")
-		self.sendPList("""<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
- "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
- <dict>
-  <key>height</key>
-  <integer>720</integer>
-  <key>overscanned</key>
-  <true/>
-  <key>refreshRate</key>
-  <real>0.016666666666666666</real>
-  <key>version</key>
-  <string>130.14</string>
-  <key>width</key>
-  <integer>1280</integer>
- </dict>
-</plist>""")
+		self.sendPList(config.default_capabilities)
 
 if __name__ == "__main__":
 	import register
 	import threading
 	import sys
-	serviceName = sys.argv[1] if len(sys.argv) > 1 else 'OpenAirMirror'
+	serviceName = sys.argv[1] if len(sys.argv) > 1 else config.service_name
 	register_thread = threading.Thread(target=register.registerAirPlay, args=[serviceName])
 	register_thread.setDaemon(True)
 	register_thread.start()
