@@ -1,6 +1,7 @@
 #include <Python.h>
 #include <structmember.h>
 #include <libavcodec/avcodec.h>
+#include <string.h>
 
 typedef struct {
 	PyObject_HEAD
@@ -8,14 +9,9 @@ typedef struct {
 	int width;
 	int height;
 
-	int yLineSkip;
-	PyObject *yData;
-
-	int uLineSkip;
-	PyObject *uData;
-
-	int vLineSkip;
-	PyObject *vData;
+	PyObject *y;
+	PyObject *u;
+	PyObject *v;
 } h264decode_YUVFrame;
 
 static PyObject *YUVFrame_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
@@ -26,21 +22,18 @@ static PyObject *YUVFrame_new(PyTypeObject *type, PyObject *args, PyObject *kwds
 		self->width = 0;
 		self->height = 0;
 
-		self->yLineSkip = 0;
-		self->yData = PyString_FromString("");
-		if (!self->yData) {
+		self->y = PyString_FromString("");
+		if (!self->y) {
 			Py_DECREF(self);
 			return NULL;
 		}
-		self->uLineSkip = 0;
-		self->uData = PyString_FromString("");
-		if (!self->uData) {
+		self->u = PyString_FromString("");
+		if (!self->u) {
 			Py_DECREF(self);
 			return NULL;
 		}
-		self->vLineSkip = 0;
-		self->vData = PyString_FromString("");
-		if (!self->vData) {
+		self->v = PyString_FromString("");
+		if (!self->v) {
 			Py_DECREF(self);
 			return NULL;
 		}
@@ -55,17 +48,17 @@ static int YUVFrame_init(h264decode_YUVFrame *self, PyObject *args, PyObject *kw
 
 static int YUVFrame_traverse(h264decode_YUVFrame *self, visitproc visit, void *arg)
 {
-	Py_VISIT(self->yData);
-	Py_VISIT(self->uData);
-	Py_VISIT(self->vData);
+	Py_VISIT(self->y);
+	Py_VISIT(self->u);
+	Py_VISIT(self->v);
 	return 0;
 }
 
 static int YUVFrame_clear(h264decode_YUVFrame *self)
 {
-	Py_CLEAR(self->yData);
-	Py_CLEAR(self->uData);
-	Py_CLEAR(self->vData);
+	Py_CLEAR(self->y);
+	Py_CLEAR(self->u);
+	Py_CLEAR(self->v);
 	return 0;
 }
 
@@ -83,12 +76,9 @@ static PyObject *YUVFrame_str(h264decode_YUVFrame *self)
 static PyMemberDef YUVFrame_members[] = {
     {"width", T_INT, offsetof(h264decode_YUVFrame, width), 0, "width of frame in pixels"},
     {"height", T_INT, offsetof(h264decode_YUVFrame, height), 0, "height of frame in pixels"},
-    {"yLineSkip", T_INT, offsetof(h264decode_YUVFrame, yLineSkip), 0, "size in bytes of Y picture line"},
-    {"yData", T_OBJECT_EX, offsetof(h264decode_YUVFrame, yData), 0, "the raw yData (height lines)"},
-    {"uLineSkip", T_INT, offsetof(h264decode_YUVFrame, uLineSkip), 0, "size in bytes of U picture line"},
-    {"uData", T_OBJECT_EX, offsetof(h264decode_YUVFrame, uData), 0, "the raw uData (height/2 lines)"},
-    {"vLineSkip", T_INT, offsetof(h264decode_YUVFrame, vLineSkip), 0, "size in bytes of V picture line"},
-    {"vData", T_OBJECT_EX, offsetof(h264decode_YUVFrame, vData), 0, "the raw vData (height/2 lines)"},
+    {"y", T_OBJECT_EX, offsetof(h264decode_YUVFrame, y), 0, "the raw Y data (height lines)"},
+    {"u", T_OBJECT_EX, offsetof(h264decode_YUVFrame, u), 0, "the raw U data (height/2 lines)"},
+    {"v", T_OBJECT_EX, offsetof(h264decode_YUVFrame, v), 0, "the raw V data (height/2 lines)"},
     {NULL}  /* Sentinel */
 };
 
@@ -138,6 +128,15 @@ PyTypeObject h264decode_YUVFrameType = {
     YUVFrame_new,              /* tp_new */
 };
 
+// Reduce linesize to provided width
+static PyObject *bundleFrameData(uint8_t *dst, uint8_t *src, int linesize, int width, int height)
+{
+	for (int i = 0; i < height; ++i) {
+		memcpy(dst + i * width, src + i * linesize, width);
+	}
+	return Py_BuildValue("s#", dst, width * height);
+}
+
 PyObject *h264decode_YUVFrame_from_AVPicture(AVFrame *picture)
 {
 	h264decode_YUVFrame *self = (h264decode_YUVFrame *)
@@ -145,30 +144,36 @@ PyObject *h264decode_YUVFrame_from_AVPicture(AVFrame *picture)
 
 	self->width = picture->width;
 	self->height = picture->height;
-	self->yLineSkip = picture->linesize[0];
-	self->uLineSkip = picture->linesize[1];
-	self->vLineSkip = picture->linesize[2];
 
-	Py_CLEAR(self->yData);
-	self->yData = Py_BuildValue("s#", picture->data[0], picture->height * picture->linesize[0]);
-	if (!self->yData) {
-		Py_DECREF(self);
-		return NULL;
+	uint8_t *auxBuf = malloc(picture->height * picture->width);
+	if (!auxBuf) {
+		PyErr_SetString(PyExc_RuntimeError, "Cannot allocate memory for bundling frame");
+		goto delSelf;
 	}
 
-	Py_CLEAR(self->uData);
-	self->uData = Py_BuildValue("s#", picture->data[1], picture->height / 2 * picture->linesize[1]);
-	if (!self->uData) {
-		Py_DECREF(self);
-		return NULL;
+	Py_CLEAR(self->y);
+	self->y = bundleFrameData(auxBuf, picture->data[0], picture->linesize[0], picture->width, picture->height);
+	if (!self->y) {
+		goto fail;
 	}
-
-	Py_CLEAR(self->vData);
-	self->vData = Py_BuildValue("s#", picture->data[2], picture->height / 2 * picture->linesize[2]);
-	if (!self->vData) {
-		Py_DECREF(self);
-		return NULL;
+	
+	Py_CLEAR(self->u);
+	self->u = bundleFrameData(auxBuf, picture->data[1], picture->linesize[1], picture->width / 2, picture->height / 2);
+	if (!self->u) {
+		goto fail;
 	}
-
+	
+	Py_CLEAR(self->v);
+	self->v = bundleFrameData(auxBuf, picture->data[2], picture->linesize[2], picture->width / 2, picture->height / 2);
+	if (!self->v) {
+		goto fail;
+	}
+	free(auxBuf);
 	return (PyObject  *)self;
+
+fail:
+	free(auxBuf);
+delSelf:
+	Py_DECREF(self);
+	return NULL;
 }

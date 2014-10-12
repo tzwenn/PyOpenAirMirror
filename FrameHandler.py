@@ -9,12 +9,6 @@ class FrameHandler(object):
 	Subclasses can reimplement handleFrameData to add functionality.
 	"""
 
-	# FIXME: Do this in C! Who needs that anyway?
-	splitEveryNChars = lambda self, s, n: (s[i:i+n] for i in xrange(0, len(s), n))
-
-	def filterData(self, data, lineSkip, width):
-		return "".join(line[:width] for line in self.splitEveryNChars(data, lineSkip))
-
 	def __init__(self, streamInfo):
 		self.streamInfo = streamInfo
 		self.start()
@@ -54,9 +48,9 @@ class YUVFileStorage(FrameHandler):
 		self.outfile = open(filename, "wb")
 
 	def handle(self, frame, timestamp):
-		self.outfile.write(self.filterData(frame.yData, frame.yLineSkip, frame.width))
-		self.outfile.write(self.filterData(frame.uData, frame.uLineSkip, frame.width / 2))
-		self.outfile.write(self.filterData(frame.vData, frame.vLineSkip, frame.width / 2))
+		self.outfile.write(frame.y)
+		self.outfile.write(frame.u)
+		self.outfile.write(frame.v)
 
 	def finish(self):
 		self.outfile.close()
@@ -67,8 +61,8 @@ class PickleStorage(YUVFileStorage):
 	fileExtension = "pkl"
 
 	def handle(self, frame, timestamp):
-		pickle.dump((frame.width, frame.height, frame.yData, frame.yLineSkip, \
-		                    frame.uData, frame.uLineSkip, frame.vData, frame.vLineSkip, timestamp), self.outfile, -1)
+		data = (frame.width, frame.height, frame.y, frame.u, frame.v, timestamp)
+		pickle.dump(data, self.outfile, -1)
 
 	@classmethod
 	def framesInFile(cls, filename):
@@ -77,10 +71,7 @@ class PickleStorage(YUVFileStorage):
 		while True:
 			frame = h264decode.YUVFrame()
 			try:
-				frame.width, frame.height, \
-					frame.yData, frame.yLineSkip, \
-					frame.uData, frame.uLineSkip, \
-					frame.vData, frame.vLineSkip, \
+				frame.width, frame.height, frame.y, frame.u, frame.v, \
 					timestamp = pickle.load(infile)
 			except EOFError:
 				return
@@ -99,16 +90,12 @@ class SDLRenderer(FrameHandler):
 		if self.window is None:
 			self.setupWindow(frame)
 
-		y = self.filterData(frame.yData, frame.yLineSkip, frame.width)
-		u = self.filterData(frame.uData, frame.uLineSkip, frame.width / 2)
-		v = self.filterData(frame.vData, frame.vLineSkip, frame.width / 2)
-
 		# No idea why I need to keep that, but otherwise overlay.display crashes
-		dummyBufBecauseItSucks = u + v
-		self.overlay.display((y, u, v))
+		dummyBufBecauseItSucks = frame.y + frame.u + frame.v
+		self.overlay.display((frame.y, frame.u, frame.v))
 		dummyBufBecauseItSucks = ""
 		pygame.event.get()
-		#self.clock.tick(10)
+		#self.clock.tick(5)
 
 	def finish(self):
 		pygame.display.quit()

@@ -85,7 +85,7 @@ class MirrorHandler(server.AirPlayHandler):
 
 		elif packet.payloadType == MirroringPacket.TYPE_CODECDATA:
 			self.decoder = h264decode.Decoder(packet.data)
-			self.frameHandler = FrameHandler.SDLRenderer(self.streamInfo)
+			self.frameHandler = FrameHandler.YUVFileStorage(self.streamInfo)
 
 	def sendCapabilities(self):
 		self.log_message("Sending capabilities")
