@@ -27,12 +27,12 @@ def runServer(port, handler):
 	httpd = BaseHTTPServer.HTTPServer(('', port), handler)
 	httpd.serve_forever()
 
-def main(defaultPort=7000, handler=AirPlayHandler):
-	import sys
+def main(port, handler=AirPlayHandler):
 	try:
-		runServer(int(sys.argv[1]) if len(sys.argv) > 1 else defaultPort, handler)
+		runServer(port, handler)
 	except KeyboardInterrupt:
 		pass
 
 if __name__ == "__main__":
-	main()
+	import sys
+	main(int(sys.argv[1]) if len(sys.argv) > 1 else 7000)

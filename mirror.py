@@ -7,6 +7,7 @@ import datetime
 
 import fply
 import h264decode
+import register
 import server
 import Cryptor
 import MirroringPacket
@@ -120,4 +121,12 @@ class MirrorHandler(server.AirPlayHandler):
 </plist>""")
 
 if __name__ == "__main__":
+	import register
+	import threading
+	import sys
+	serviceName = sys.argv[1] if len(sys.argv) > 1 else 'OpenAirMirror'
+	register_thread = threading.Thread(target=register.registerAirPlay, args=[serviceName])
+	register_thread.setDaemon(True)
+	register_thread.start()
+
 	server.main(7100, MirrorHandler)
