@@ -9,7 +9,7 @@ import fply
 import h264decode
 import server
 import Cryptor
-import MirroringPackets
+import MirroringPacket
 
 splitEveryNChars = lambda s, n: (s[i:i+n] for i in xrange(0, len(s), n))
 
@@ -64,21 +64,23 @@ class MirrorHandler(server.AirPlayHandler):
 
 	def parseStreamPacket(self):
 		try:
-			packet = MirroringPackets.readNext(self.rfile)
-			if packet is None:
-				return self.closeConnection()
-
-			if isinstance(packet, MirroringPackets.CodecData):
-				self.decoder = h264decode.Decoder(packet.data)
-
-			if isinstance(packet, MirroringPackets.Video):
-				decrypted = self.cryptor.decrypt(packet.bitstream)
-				if decrypted:
-					self.decodeAndDisplayFrame(decrypted)
-
+			packet = MirroringPacket.Packet(self.rfile)
+		except IOError:
+			return self.closeConnection() # TODO: Really?
+		except EOFError:
+			return self.closeConnection()
 		except socket.timeout, e:
 			self.log_error("Request timed out: %r", e)
-			self.closeConnection()
+			return self.closeConnection()
+
+		if packet.payloadType == MirroringPacket.TYPE_VIDEO:
+			decrypted = self.cryptor.decrypt(packet.data)
+			if decrypted:
+				self.decodeAndDisplayFrame(decrypted)
+
+		if packet.payloadType == MirroringPacket.TYPE_CODECDATA:
+			self.decoder = h264decode.Decoder(packet.data)
+
 	
 	def decodeAndDisplayFrame(self, h264Packet):
 		if self.decoder is None:
