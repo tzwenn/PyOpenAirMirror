@@ -2,11 +2,11 @@
 
 import biplist
 import socket
-import sys
 
 try:
 	import fply
 except ImportError:
+	import sys
 	sys.stderr.write("!! Cannot find binary fairplay module, fallback to dummy\n")
 	sys.stderr.write("!! Most clients will refuse to connect\n")
 	import dummyFPLY as fply
@@ -16,11 +16,11 @@ import register
 import server
 import Cryptor
 import MirroringPacket
-import FrameHandler
+import FrameSink
 
 import config
 
-SelectedHandlers = (FrameHandler.SDLRenderer)
+SelectedSinks = [FrameSink.SDLRenderer]
 
 class MirrorHandler(server.AirPlayHandler):
 	server_version = config.server_version
@@ -56,7 +56,7 @@ class MirrorHandler(server.AirPlayHandler):
 			self.log_message("Client doesn't want to encrypt stream. Skipping AES")
 			self.cryptor = Cryptor.EchoCryptor()
 
-		self.frameHandlers = []
+		self.frameSinks = []
 		self.log_message("Get Stream info: %r", self.streamInfo)
 		self.log_message("Switching to stream packet mode")
 		self.handle_one_request = self.parseStreamPacket
@@ -83,12 +83,12 @@ class MirrorHandler(server.AirPlayHandler):
 			decryptedH264Packet = self.cryptor.decrypt(packet.data)
 			frame = self.decoder.decodeFrame(decryptedH264Packet)
 			if frame:
-				for handler in self.frameHandlers:
-					handler.handle(frame, packet.timestamp)
+				for sink in self.frameSinks:
+					sink.handle(frame, packet.timestamp)
 
 		elif packet.payloadType == MirroringPacket.TYPE_CODECDATA:
 			self.decoder = h264decode.Decoder(packet.data)
-			self.frameHandlers = [cls(self.streamInfo) for cls in SelectedHandlers]
+			self.frameSinks = [cls(self.streamInfo) for cls in SelectedSinks]
 
 	def sendCapabilities(self):
 		self.log_message("Sending capabilities")

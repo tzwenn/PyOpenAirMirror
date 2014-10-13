@@ -3,10 +3,10 @@ import datetime
 import cPickle as pickle
 import pygame
 
-class FrameHandler(object):
+class FrameSink(object):
 	"""
-	Base class of different handlers for a received mirroring frame.
-	Subclasses can reimplement handleFrameData to add functionality.
+	Base class of different sinks for a received mirroring frame.
+	Subclasses can reimplement handle to add functionality.
 	"""
 
 	def __init__(self, streamInfo=None):
@@ -31,7 +31,7 @@ class FrameHandler(object):
 		""" Called when the session was finished """
 		pass
 
-class YUVFileStorage(FrameHandler):
+class YUVFileStorage(FrameSink):
 	"""
 	Stores the received frames in a huge YUV420p file.
 	The file name will be automatically generated from the current time
@@ -78,7 +78,7 @@ class PickleStorage(YUVFileStorage):
 
 			yield frame, timestamp
 
-class SDLRenderer(FrameHandler):
+class SDLRenderer(FrameSink):
 
 	def start(self):
 		pygame.init()
