@@ -131,7 +131,8 @@ PyTypeObject h264decode_YUVFrameType = {
 // Reduce linesize to provided width
 static PyObject *bundleFrameData(uint8_t *dst, uint8_t *src, int linesize, int width, int height)
 {
-	for (int i = 0; i < height; ++i) {
+	int i;
+	for (i = 0; i < height; ++i) {
 		memcpy(dst + i * width, src + i * linesize, width);
 	}
 	return Py_BuildValue("s#", dst, width * height);
