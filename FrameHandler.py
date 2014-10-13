@@ -9,8 +9,8 @@ class FrameHandler(object):
 	Subclasses can reimplement handleFrameData to add functionality.
 	"""
 
-	def __init__(self, streamInfo):
-		self.streamInfo = streamInfo
+	def __init__(self, streamInfo=None):
+		self.streamInfo = streamInfo if streamInfo is not None else {}
 		self.start()
 
 	def __del__(self):
@@ -95,7 +95,7 @@ class SDLRenderer(FrameHandler):
 		self.overlay.display((frame.y, frame.u, frame.v))
 		dummyBufBecauseItSucks = ""
 		pygame.event.get()
-		self.clock.tick(10)
+		#self.clock.tick(10)
 
 	def finish(self):
 		pygame.display.quit()

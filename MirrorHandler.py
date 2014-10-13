@@ -20,6 +20,8 @@ import FrameHandler
 
 import config
 
+SelectedHandlers = (FrameHandler.SDLRenderer)
+
 class MirrorHandler(server.AirPlayHandler):
 	server_version = config.server_version
 	sys_version = ""
@@ -54,7 +56,7 @@ class MirrorHandler(server.AirPlayHandler):
 			self.log_message("Client doesn't want to encrypt stream. Skipping AES")
 			self.cryptor = Cryptor.EchoCryptor()
 
-		self.handler = None
+		self.frameHandlers = []
 		self.log_message("Get Stream info: %r", self.streamInfo)
 		self.log_message("Switching to stream packet mode")
 		self.handle_one_request = self.parseStreamPacket
@@ -62,7 +64,7 @@ class MirrorHandler(server.AirPlayHandler):
 	def closeConnection(self):
 		self.log_message("Closing connection")
 		self.close_connection = 1
-		self.frameHandler = None
+		self.frameHandlers = []
 
 	def parseStreamPacket(self):
 		try:
@@ -80,12 +82,13 @@ class MirrorHandler(server.AirPlayHandler):
 		if packet.payloadType == MirroringPacket.TYPE_VIDEO:
 			decryptedH264Packet = self.cryptor.decrypt(packet.data)
 			frame = self.decoder.decodeFrame(decryptedH264Packet)
-			if frame and self.frameHandler is not None:
-				self.frameHandler.handle(frame, packet.timestamp)
+			if frame:
+				for handler in self.frameHandlers:
+					handler.handle(frame, packet.timestamp)
 
 		elif packet.payloadType == MirroringPacket.TYPE_CODECDATA:
 			self.decoder = h264decode.Decoder(packet.data)
-			self.frameHandler = FrameHandler.SDLRenderer(self.streamInfo)
+			self.frameHandlers = [cls(self.streamInfo) for cls in SelectedHandlers]
 
 	def sendCapabilities(self):
 		self.log_message("Sending capabilities")
