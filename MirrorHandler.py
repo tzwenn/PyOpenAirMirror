@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-import biplist
 import socket
+import biplist
 
 try:
 	import fply
@@ -12,7 +12,6 @@ except ImportError:
 	import dummyFPLY as fply
 
 import h264decode
-import register
 import server
 import Cryptor
 import MirroringPacket
@@ -20,10 +19,8 @@ import FrameSink
 
 import config
 
-SelectedSinks = [FrameSink.SDLRenderer]
-
 class MirrorHandler(server.AirPlayHandler):
-	server_version = config.server_version
+	server_version = "%s/%s" % (config.server_name, config.server_version)
 	sys_version = ""
 	protocol_version = "HTTP/1.1"
 
@@ -88,7 +85,7 @@ class MirrorHandler(server.AirPlayHandler):
 
 		elif packet.payloadType == MirroringPacket.TYPE_CODECDATA:
 			self.decoder = h264decode.Decoder(packet.data)
-			self.frameSinks = [cls(self.streamInfo) for cls in SelectedSinks]
+			self.frameSinks = [cls(self.streamInfo) for cls in config.selectedSinks]
 
 	def sendCapabilities(self):
 		self.log_message("Sending capabilities")

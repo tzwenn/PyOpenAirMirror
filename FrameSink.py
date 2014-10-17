@@ -9,6 +9,9 @@ class FrameSink(object):
 	Subclasses can reimplement handle to add functionality.
 	"""
 
+	"""The shortcut to select this subclass in the command line arguments"""
+	cmdLineKey = None
+
 	def __init__(self, streamInfo=None):
 		self.streamInfo = streamInfo if streamInfo is not None else {}
 		self.start()
@@ -41,6 +44,7 @@ class YUVFileStorage(FrameSink):
 	"""
 
 	fileExtension = "yuv"
+	cmdLineKey = "yuv"
 	
 	def start(self):
 		filename = datetime.datetime.now().strftime("%y%m%d_%H%M%S_%%s.%%s") \
@@ -59,6 +63,7 @@ class PickleStorage(YUVFileStorage):
 	# How big can files get?!?!?! m-(
 
 	fileExtension = "pkl"
+	cmdLineKey = "pickle"
 
 	def handle(self, frame, timestamp):
 		data = (frame.width, frame.height, frame.y, frame.u, frame.v, timestamp)
@@ -80,9 +85,11 @@ class PickleStorage(YUVFileStorage):
 
 class SDLRenderer(FrameSink):
 
+	cmdLineKey = "sdl"
+
 	def start(self):
 		pygame.init()
-		pygame.display.set_caption("%s: %s" % (config.window_caption, self.sessionName()))
+		pygame.display.set_caption("%s: %s" % (config.sdl_window_caption, self.sessionName()))
 		self.clock = pygame.time.Clock()
 		self.window = None
 
@@ -104,3 +111,14 @@ class SDLRenderer(FrameSink):
 		self.window = pygame.display.set_mode((frame.width, frame.height))
 		self.overlay = pygame.Overlay(pygame.YV12_OVERLAY, (frame.width, frame.height))
 
+##############################################################################
+
+availableSinks = {}
+
+def __findSubclasses(cls):
+	global availableSinks
+	for c in cls.__subclasses__():
+		availableSinks[c.cmdLineKey] = c
+		__findSubclasses(c)
+
+__findSubclasses(FrameSink)
