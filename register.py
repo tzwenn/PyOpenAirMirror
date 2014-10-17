@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import select
 import pybonjour
 import config
@@ -24,14 +22,14 @@ def getHWAddress(interface="wlan0"):
 	macAddr = hex(uuid.getnode())[2:]
 	return ':'.join(a+b for a,b in zip(macAddr[::2], macAddr[1::2]))
 
-def registerAirPlay(name, targetPort=7000):
+def registerAirPlay(targetPort=7000):
 	airPlayParams = {
 		"deviceid": getHWAddress(),
 		"features": "0xf7",
 		"model": config.model,
 		"srcvers": config.server_version
 	}
-	sdRef = pybonjour.DNSServiceRegister(name = name, 
+	sdRef = pybonjour.DNSServiceRegister(name = config.service_name,
 										 regtype = "_airplay._tcp",
 										 port = targetPort,
 										 txtRecord = buildTxtRecord(airPlayParams))

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import socket
 
 try:
@@ -10,13 +8,13 @@ except ImportError:
 	sys.stderr.write("!! Most clients will refuse to connect\n")
 	import dummyFPLY as fply
 
+import config
 import h264decode
 import AirPlayHandler
 import Cryptor
 import MirroringPacket
 import FrameSink
 
-import config
 
 class MirrorHandler(AirPlayHandler.AirPlayHandler):
 	server_version = "%s/%s" % (config.server_name, config.server_version)
