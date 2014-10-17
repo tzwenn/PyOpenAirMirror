@@ -1,6 +1,7 @@
 *.pyc
 *.mp4
 *.yuv
+*.pkl
 *.so
 *.dump
 test/

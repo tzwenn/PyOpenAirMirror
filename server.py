@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
 import BaseHTTPServer
+import biplist
 
 def __fallbackAction__(request):
 	request.send_error(404, "File not found")
 
 class AirPlayHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
-	def sendPList(self, content):
-		self.sendContent(content, "text/x-apple-plist+xml")
+	def sendPList(self, content, binary=False):
+		mime = "application/x-plist" if binary else "text/x-apple-plist+xml"
+		self.sendContent(biplist.writePlistToString(content, binary), mime)
 
 	def sendContent(self, content, contentType, X_Apple_ET=None):
 		self.send_response(200)
@@ -22,6 +24,9 @@ class AirPlayHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 	def readBody(self):
 		length = int(self.headers['Content-Length'])
 		return self.rfile.read(length)
+
+	def readPlist(self):
+		return biplist.readPlistFromString(self.readBody())
 
 def runServer(port, handler):
 	httpd = BaseHTTPServer.HTTPServer(('', port), handler)

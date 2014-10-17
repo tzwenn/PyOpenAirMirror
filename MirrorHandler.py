@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import socket
-import biplist
 
 try:
 	import fply
@@ -44,7 +43,7 @@ class MirrorHandler(server.AirPlayHandler):
 		self.sendContent(answer, "application/octet-stream", 32)
 
 	def receiveStream(self):
-		self.streamInfo = biplist.readPlistFromString(self.readBody())
+		self.streamInfo = self.readPlist()
 		if 'param1' in self.streamInfo and 'param2' in self.streamInfo:
 			aesKey = fply.decrypt(self.streamInfo['param1'])
 			aesIV = self.streamInfo['param2']
