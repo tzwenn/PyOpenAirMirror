@@ -12,15 +12,13 @@ class FrameSink(object):
 	"""The shortcut to select this subclass in the command line arguments"""
 	cmdLineKey = None
 
-	def __init__(self, streamInfo=None):
+	def __init__(self, streamInfo=None, clientName=None):
 		self.streamInfo = streamInfo if streamInfo is not None else {}
+		self.clientName = clientName if clientName is not None else str(self.streamInfo.get('deviceID', 'UnknownClient'))
 		self.start()
 
 	def __del__(self):
 		self.finish()
-
-	def sessionName(self):
-		return str(self.streamInfo.get('deviceID', 'UnknownClient'))
 
 	def start(self):
 		""" Called on initialization. Reimplement in subclass if needed """
@@ -48,7 +46,7 @@ class YUVFileStorage(FrameSink):
 	
 	def start(self):
 		filename = datetime.datetime.now().strftime("%y%m%d_%H%M%S_%%s.%%s") \
-			% (self.sessionName(), self.fileExtension)
+			% (self.clientName, self.fileExtension)
 		self.outfile = open(filename, "wb")
 
 	def handle(self, frame, timestamp):
@@ -89,7 +87,7 @@ class SDLRenderer(FrameSink):
 
 	def start(self):
 		pygame.init()
-		pygame.display.set_caption("%s: %s" % (config.sdl_window_caption, self.sessionName()))
+		pygame.display.set_caption("%s: %s" % (config.sdl_window_caption, self.clientName))
 		self.clock = pygame.time.Clock()
 		self.window = None
 
@@ -118,7 +116,8 @@ availableSinks = {}
 def __findSubclasses(cls):
 	global availableSinks
 	for c in cls.__subclasses__():
-		availableSinks[c.cmdLineKey] = c
+		if c.cmdLineKey is not None:
+			availableSinks[c.cmdLineKey] = c
 		__findSubclasses(c)
 
 __findSubclasses(FrameSink)

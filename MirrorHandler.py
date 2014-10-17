@@ -84,10 +84,13 @@ class MirrorHandler(server.AirPlayHandler):
 
 		elif packet.payloadType == MirroringPacket.TYPE_CODECDATA:
 			self.decoder = h264decode.Decoder(packet.data)
-			self.frameSinks = [cls(self.streamInfo) for cls in config.selectedSinks]
+			self.frameSinks = [cls(self.streamInfo, self.clientName) \
+									for cls in config.selectedSinks]
 
 	def sendCapabilities(self):
 		self.log_message("Sending capabilities")
+		self.clientName = self.headers.get('X-Apple-Client-Name')
+		self.clientProtocolVersion = self.headers.get('X-Apple-ProtocolVersion')
 		self.sendPList(config.default_capabilities)
 
 def runServer():
