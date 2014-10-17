@@ -11,16 +11,15 @@ except ImportError:
 	import dummyFPLY as fply
 
 import h264decode
-import server
+import AirPlayHandler
 import Cryptor
 import MirroringPacket
 import FrameSink
 
 import config
 
-class MirrorHandler(server.AirPlayHandler):
+class MirrorHandler(AirPlayHandler.AirPlayHandler):
 	server_version = "%s/%s" % (config.server_name, config.server_version)
-	sys_version = ""
 	protocol_version = "HTTP/1.1"
 
 	def do_GET(self):
@@ -93,11 +92,3 @@ class MirrorHandler(server.AirPlayHandler):
 		self.clientProtocolVersion = self.headers.get('X-Apple-ProtocolVersion')
 		self.sendPList(config.default_capabilities)
 
-def runServer():
-	try:
-		server.runServer(7100, MirrorHandler)
-	except KeyboardInterrupt:
-		pass
-
-if __name__ == "__main__":
-	runServer()
