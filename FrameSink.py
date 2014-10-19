@@ -43,7 +43,7 @@ class YUVFileStorage(FrameSink):
 
 	fileExtension = "yuv"
 	cmdLineKey = "yuv"
-	
+
 	def start(self):
 		filename = datetime.datetime.now().strftime("%y%m%d_%H%M%S_%%s.%%s") \
 			% (self.clientName, self.fileExtension)

@@ -23,7 +23,7 @@ class MirrorHandler(AirPlayHandler.AirPlayHandler):
 	def do_GET(self):
 		if self.path == "/stream.xml" and self.checkAuth():
 			self.sendCapabilities()
- 
+
 	def do_POST(self):
 		if self.path == "/fp-setup":
 			self.fpSetup()

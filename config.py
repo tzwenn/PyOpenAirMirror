@@ -46,5 +46,5 @@ def applyArguments():
 	service_name = args.name
 	password = args.password
 	selectedSinks = [FrameSink.availableSinks[key] for key in args.sink]
-	
-	
+
+

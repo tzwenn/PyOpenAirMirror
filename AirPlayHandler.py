@@ -21,32 +21,25 @@ class DigestAuthHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 		self.send_header("Content-Length", 0)
 		self.end_headers()
 
-	def checkAuth(self):
-		if config.password is None:
-			return True
-
+	def parseAuthHeader(self):
 		auth = dict(re.findall(r'(\b[^ ,=]+)="?([^",]+)"?',
 				          self.headers.getheader("Authorization") or ""))
+		if self.nonce != auth["nonce"]:
+			raise Exception("No nonce created, or wrong one")
+		hash_a1 = self.md5Join(auth["username"], self.realm, config.password)
+		hash_a2 = self.md5Join(self.command, auth["uri"])
+		response = self.md5Join(hash_a1, self.nonce, hash_a2)
+		if response != auth["response"]:
+			raise Exception("Wrong password")
+
+	def checkAuth(self):
 		try:
-			if self.nonce != auth["nonce"]:
-				raise Exception("No nonce created, or wrong one")	
-			hash_a1 = self.md5Join(auth["username"], self.realm, config.password)
-			hash_a2 = self.md5Join(self.command, auth["uri"])
-			response = self.md5Join(hash_a1, self.nonce, hash_a2)
-			if response != auth["response"]:
-				raise Exception("Wrong password")
+			if config.password is not None:
+				self.parseAuthHeader()
 			return True
 		except:
 			self.requestAuth()
 			return False
-
-	def setForAllRequests(self):
-		self.parse_request = parse_request_and_check
-
-	def parse_request_and_check(self):
-		if not BaseHTTPServer.BaseHTTPRequestHandler.parse_request(self):
-			return False
-		return self.checkAuth()
 
 class AirPlayHandler(DigestAuthHandler):
 	sys_version = ""

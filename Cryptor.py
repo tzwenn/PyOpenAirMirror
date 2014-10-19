@@ -15,13 +15,13 @@ class Cryptor(object):
 		blocksEnd -= blocksEnd % AES.block_size
 		self.outbuf += self.aes.decrypt(self.inbuf[:blocksEnd])
 		self.inbuf = self.inbuf[blocksEnd:]
-		
+
 		res = self.outbuf[:self.lastLen]
 		self.outbuf = self.outbuf[self.lastLen:]
-		
+
 		self.lastLen = len(data)
 		return res
-	
+
 
 class EchoCryptor(object):
 
