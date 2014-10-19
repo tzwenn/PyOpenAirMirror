@@ -21,7 +21,7 @@ class MirrorHandler(AirPlayHandler.AirPlayHandler):
 	protocol_version = "HTTP/1.1"
 
 	def do_GET(self):
-		if self.path == "/stream.xml":
+		if self.path == "/stream.xml" and self.checkAuth():
 			self.sendCapabilities()
  
 	def do_POST(self):
@@ -86,7 +86,7 @@ class MirrorHandler(AirPlayHandler.AirPlayHandler):
 
 	def sendCapabilities(self):
 		self.log_message("Sending capabilities")
-		self.clientName = self.headers.get('X-Apple-Client-Name')
-		self.clientProtocolVersion = self.headers.get('X-Apple-ProtocolVersion')
+		self.clientName = self.headers.getheader('X-Apple-Client-Name')
+		self.clientProtocolVersion = self.headers.getheader('X-Apple-ProtocolVersion')
 		self.sendPList(config.default_capabilities)
 
