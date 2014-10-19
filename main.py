@@ -10,7 +10,7 @@ def main():
 	register_thread.setDaemon(True)
 	register_thread.start()
 
-	server.runServer(7100, MirrorHandler)
+	server.runServer(7100, MirrorHandler.MirrorHandler)
 
 if __name__ == "__main__":
 	import config
