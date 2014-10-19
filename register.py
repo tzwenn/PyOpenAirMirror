@@ -15,7 +15,8 @@ def splitTxtRecord(s):
 	return d
 
 def buildTxtRecord(dic):
-   return "".join([chr(len(s)) + s for s in ("%s=%s" % e for e in dic.iteritems())])
+   return "".join([chr(len(s)) + s for s in
+	   ("%s=%s" % (k, str(v)) for k,v in dic.iteritems())])
 
 def getHWAddress(interface="wlan0"):
 	import uuid
@@ -27,6 +28,7 @@ def registerAirPlay(targetPort=7000):
 		"deviceid": getHWAddress(),
 		"features": "0xf7",
 		"model": config.model,
+		"pw": int(config.password is not None),
 		"srcvers": config.server_version
 	}
 	sdRef = pybonjour.DNSServiceRegister(name = config.service_name,

@@ -6,6 +6,7 @@ service_name = "OpenAirMirror"
 sdl_window_caption = service_name
 
 selectedSinks = []
+password = None
 
 default_capabilities = {
 		"width": 1280,
@@ -27,10 +28,12 @@ def parseArguments():
 	parser.add_argument("name", type=str, nargs='?',
 			            help="the name under which the service gets announced",
 						default=service_name)
-	parser.add_argument("--sink", nargs='+',
+	parser.add_argument("--sink", "-s", nargs='+',
 						choices=FrameSink.availableSinks.keys(),
 						default=["sdl"],
 						help="What to do with received frames")
+	parser.add_argument("--password", "-p",
+						help="server's password (none if not provided)")
 
 	global args
 	args = parser.parse_args()
@@ -38,8 +41,10 @@ def parseArguments():
 
 def applyArguments():
 	global service_name
+	global password
 	global selectedSinks
 	service_name = args.name
+	password = args.password
 	selectedSinks = [FrameSink.availableSinks[key] for key in args.sink]
 	
 	
