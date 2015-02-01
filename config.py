@@ -16,6 +16,9 @@ default_capabilities = {
 		"refreshRate": 1.0/60,
 }
 
+fplyServerPort = 20992
+fplyServer = None
+
 #####################################################################
 
 import argparse
@@ -34,6 +37,8 @@ def parseArguments():
 						help="What to do with received frames")
 	parser.add_argument("--password", "-p",
 						help="server's password (none if not provided)")
+	parser.add_argument("--fply-server", "-f", type=str,
+						help="a server that can answer FPLY challenges")
 
 	global args
 	args = parser.parse_args()
@@ -43,8 +48,12 @@ def applyArguments():
 	global service_name
 	global password
 	global selectedSinks
+	global fplyServer, fplyServerPort
 	service_name = args.name
 	password = args.password
 	selectedSinks = [FrameSink.availableSinks[key] for key in args.sink]
-
+	fplyServer = args.fply_server
+	if fplyServer is not None and ':' in fplyServer:
+		fplyServer, _, fsp = fplyServer.rpartition(':')
+		fplyServerPort = int(fsp)
 

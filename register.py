@@ -2,18 +2,6 @@ import select
 import pybonjour
 import config
 
-def splitTxtRecord(s):
-	d = {}
-	while s:
-		length = ord(s[0]) + 1
-		line = s[1:length]
-		s = s[length:]
-		if "=" not in line:
-			continue
-		key, _dummy, val = line.partition("=")
-		d[key] = val
-	return d
-
 def buildTxtRecord(dic):
    return "".join([chr(len(s)) + s for s in
 	   ("%s=%s" % (k, str(v)) for k,v in dic.iteritems())])

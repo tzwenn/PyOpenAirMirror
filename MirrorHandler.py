@@ -3,9 +3,6 @@ import socket
 try:
 	import fply
 except ImportError:
-	import sys
-	sys.stderr.write("!! Cannot find binary fairplay module, fallback to dummy\n")
-	sys.stderr.write("!! Most clients will refuse to connect\n")
 	import dummyFPLY as fply
 
 import config
