@@ -1,0 +1,3 @@
+[submodule "h264decode"]
+	path = h264decode
+	url = https://github.com/tzwenn/pyh264decode.git
