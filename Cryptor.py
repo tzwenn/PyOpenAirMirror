@@ -1,27 +1,11 @@
 from Crypto.Cipher import AES
+import Crypto.Util.Counter
 
-class Cryptor(object):
+class Cryptor(AES.AESCipher):
 
 	def __init__(self, key, iv):
-		#self.aes = AES.new(key, mode=AES.MODE_CBC, IV=iv) # This resembles stuff from shairtunes
-		self.aes = AES.new(key, mode=AES.MODE_ECB, IV=iv) # I found this in airtunesd
-		self.inbuf = ""
-		self.outbuf = ""
-		self.lastLen = 0
-
-	def decrypt(self, data):
-		self.inbuf += data
-		blocksEnd = len(self.inbuf)
-		blocksEnd -= blocksEnd % AES.block_size
-		self.outbuf += self.aes.decrypt(self.inbuf[:blocksEnd])
-		self.inbuf = self.inbuf[blocksEnd:]
-
-		res = self.outbuf[:self.lastLen]
-		self.outbuf = self.outbuf[self.lastLen:]
-
-		self.lastLen = len(data)
-		return res
-
+		self.counter = Crypto.Util.Counter.new(128, initial_value=long(iv.encode("hex"), 16))
+		AES.AESCipher.__init__(self, key, mode=AES.MODE_CTR, counter=self.counter)
 
 class EchoCryptor(object):
 
