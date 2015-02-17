@@ -12,10 +12,10 @@ import Cryptor
 import MirroringPacket
 import FrameSink
 
-
 class MirrorHandler(AirPlayHandler.AirPlayHandler):
 	server_version = "%s/%s" % (config.server_name, config.server_version)
 	protocol_version = "HTTP/1.1"
+	decoder_cls = h264decode.Decoder
 
 	def do_GET(self):
 		if self.path == "/stream.xml" and self.checkAuth():
@@ -77,7 +77,7 @@ class MirrorHandler(AirPlayHandler.AirPlayHandler):
 					sink.handle(frame, packet.timestamp)
 
 		elif packet.payloadType == MirroringPacket.TYPE_CODECDATA:
-			self.decoder = h264decode.Decoder(packet.data)
+			self.decoder = self.decoder_cls(packet.data)
 			self.frameSinks = [cls(self.streamInfo, self.clientName) \
 									for cls in config.selectedSinks]
 
