@@ -1,7 +1,9 @@
 import fply.dylib
-import fply.dummy
+import fply.rpc
 
-if fply.dylib.available():
+if fply.rpc.available():
+	FPLY = fply.rpc.FPLY
+elif fply.dylib.available():
 	FPLY = fply.dylib.FPLY
 else:
 	import sys

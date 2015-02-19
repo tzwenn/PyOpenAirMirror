@@ -1,33 +1,28 @@
 #!/usr/bin/env python
-import fply
-import socket
 import sys
+import SocketServer
+
+import fply
 from config import fplyServerPort as defaultPort
 
-methods = {
-	"phase1": fply.phase1,
-	"phase2": fply.phase2,
-	"decrypt": fply.decrypt
-}
+class FPLYService(SocketServer.BaseRequestHandler):
 
-def handle(msg):
-	command, _, data = msg.partition(':')
-	return methods.get(command, lambda s: "Unknown")(data)
+	def setup(self):
+		self.fply = fply.FPLY()
 
-def start(port):
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.bind(('', port))
-	s.listen(1)
-	print "Listening on %d" % port
-	while True:
-		conn, addr = s.accept()
-		while True:
-			msg = conn.recv(1024)
-			if not msg:
-				break
-			conn.sendall(handle(msg))	
-		conn.close()
+	def handle(self):
+		print "Connection from", self.client_address[0]
+		data = self.request.recv(self.fply.phase1_in_len)
+		self.request.send(self.fply.phase1(data))
+		data = self.request.recv(self.fply.phase2_in_len)
+		self.request.send(self.fply.phase2(data))
+		data = self.request.recv(self.fply.decrypt_in_len)
+		self.request.send(self.fply.decrypt(data))
+
+class FPLYServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+	pass
 
 if __name__ == "__main__":
 	port = defaultPort if len(sys.argv) < 2 else int(sys.argv[1])
-	start(port)
+	server = FPLYServer(('', port), FPLYService)
+	server.serve_forever()
