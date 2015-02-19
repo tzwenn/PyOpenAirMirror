@@ -4,11 +4,12 @@ import fply
 import config
 import h264decode
 import AirPlayHandler
-import Cryptor
-import MirroringPacket
 import FrameSink
 
-class MirrorHandler(AirPlayHandler.AirPlayHandler):
+import mirror.Packet
+import mirror.Cryptor
+
+class MirrorService(AirPlayHandler.AirPlayHandler):
 	server_version = "%s/%s" % (config.server_name, config.server_version)
 	protocol_version = "HTTP/1.1"
 	decoder_cls = h264decode.Decoder
@@ -41,10 +42,10 @@ class MirrorHandler(AirPlayHandler.AirPlayHandler):
 		if 'param1' in self.streamInfo and 'param2' in self.streamInfo:
 			aesKey = self.fply.decrypt(self.streamInfo['param1'])
 			aesIV = self.streamInfo['param2']
-			self.cryptor = Cryptor.Cryptor(aesKey, aesIV)
+			self.cryptor = mirror.Cryptor.Cryptor(aesKey, aesIV)
 		else:
 			self.log_message("Client doesn't want to encrypt stream. Skipping AES")
-			self.cryptor = Cryptor.EchoCryptor()
+			self.cryptor = mirror.Cryptor.EchoCryptor()
 
 		self.frameSinks = []
 		self.log_message("Get Stream info: %r", self.streamInfo)
@@ -58,7 +59,7 @@ class MirrorHandler(AirPlayHandler.AirPlayHandler):
 
 	def parseStreamPacket(self):
 		try:
-			packet = MirroringPacket.Packet(self.rfile)
+			packet = mirror.Packet.Packet(self.rfile)
 		except IOError:
 			return self.closeConnection() # TODO: Really?
 		except EOFError:
@@ -69,14 +70,14 @@ class MirrorHandler(AirPlayHandler.AirPlayHandler):
 		self.handlePacket(packet)
 
 	def handlePacket(self, packet):
-		if packet.payloadType == MirroringPacket.TYPE_VIDEO:
+		if packet.payloadType == mirror.Packet.TYPE_VIDEO:
 			decryptedH264Packet = self.cryptor.decrypt(packet.data)
 			frame = self.decoder.decodeFrame(decryptedH264Packet)
 			if frame:
 				for sink in self.frameSinks:
 					sink.handle(frame, packet.timestamp)
 
-		elif packet.payloadType == MirroringPacket.TYPE_CODECDATA:
+		elif packet.payloadType == mirror.Packet.TYPE_CODECDATA:
 			self.decoder = self.decoder_cls(packet.data)
 			self.frameSinks = [cls(self.streamInfo, self.clientName) \
 									for cls in config.selectedSinks]
