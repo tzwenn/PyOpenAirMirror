@@ -3,20 +3,20 @@ import socket
 import fply
 import config
 import h264decode
-import AirPlayHandler
 import FrameSink
 
+import common.AirPlayHandler
 import mirror.Packet
 import mirror.Cryptor
 
-class MirrorService(AirPlayHandler.AirPlayHandler):
+class MirrorService(common.AirPlayHandler.AirPlayHandler):
 	server_version = "%s/%s" % (config.server_name, config.server_version)
 	protocol_version = "HTTP/1.1"
 	decoder_cls = h264decode.Decoder
 
 	def setup(self):
 		self.fply = fply.FPLY()
-		AirPlayHandler.AirPlayHandler.setup(self)
+		common.AirPlayHandler.AirPlayHandler.setup(self)
 
 	def do_GET(self):
 		if self.path == "/stream.xml" and self.checkAuth():

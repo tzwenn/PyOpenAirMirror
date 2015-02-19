@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import register
 import threading
-
 import BaseHTTPServer
+
+import common.register
 
 def runServer(port, handler):
 	try:
@@ -13,7 +13,7 @@ def runServer(port, handler):
 		pass
 
 def main():
-	register_thread = threading.Thread(target=register.registerAirPlay)
+	register_thread = threading.Thread(target=common.register.registerAirPlay)
 	register_thread.setDaemon(True)
 	register_thread.start()
 
