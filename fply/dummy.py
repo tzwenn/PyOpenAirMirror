@@ -1,13 +1,15 @@
-class FPLY(object):
+import fply.base
 
-	def phase1(data, stype=0):
+class FPLY(fply.base.BaseFPLY):
+
+	def phase1(self, data, stype=0):
 		res = "FPLY\x03\x01\x02"
-		return res + '\x00' * (0x8e - len(res))
+		return res + '\x00' * (self.phase1_out_len - len(res))
 
-	def phase2(data, stype=0):
+	def phase2(self, data, stype=0):
 		res = "FPLY\x03\x01\x04"
-		return res + '\x00' * (0x20 - len(res))
+		return res + '\x00' * (self.phase2_out_len - len(res))
 
-	def decrypt(data):
-		return '\x00' * 0x10
+	def decrypt(self, data):
+		return '\x00' * self.decrypt_out_len
 
