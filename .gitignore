@@ -3,6 +3,7 @@
 *.yuv
 *.pkl
 *.so
+*.dylib
 *.dump
 test/
 .*.swp
