@@ -40,15 +40,21 @@ class FPLY(fply.base.BaseFPLY):
 		return self._join(self.lib.decrypt(self.handle, self._cbuf(data), len(data)))
 
 def available(filename=defaultLibName):
-	import platform, sys, os
+	import platform, sys, os, hashlib
 	if not (platform.system() == 'Darwin' and platform.machine() == 'x86_64'):
 		return False
 
 	if not os.path.exists(filename):
 		answer = raw_input("\033[33mBinary fply library missing.\033[m\nShall I try to download it [Y/n]? ")
 		if answer.lower() in ["", "y", "yes"]:
-			os.system(fply.base.path("get_libfply.sh") + " " + fply.base.path(filename))
-		return os.path.exists(filename)
+			os.system(fply.base.path("get_libfply.sh") + " " + filename)
+		else:
+			return False
 
-	return True
+	try:
+		with open(filename, "rb") as f:
+			h = hashlib.sha1(f.read()).hexdigest()
+		return h == "ec3e7afe320ff37e44fc775072db8f25d78eba2e"
+	except:
+		return False
 
