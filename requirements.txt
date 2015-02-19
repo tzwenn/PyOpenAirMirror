@@ -1,0 +1,4 @@
+biplist
+pybonjour
+pycrypto
+pygame
