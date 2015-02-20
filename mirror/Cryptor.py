@@ -1,13 +1,20 @@
-from Crypto.Cipher import AES
-import Crypto.Util.Counter
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
 
-class Cryptor(AES.AESCipher):
+class Cryptor(object):
 
 	def __init__(self, key, iv):
-		self.counter = Crypto.Util.Counter.new(128, initial_value=long(iv.encode("hex"), 16))
-		AES.AESCipher.__init__(self, key, mode=AES.MODE_CTR, counter=self.counter)
+		self.cipher = Cipher(
+				algorithms.AES(key),
+				modes.CTR(iv),
+				backend=default_backend())
+		self.cryptor = self.cipher.decryptor()
+
+	def decrypt(self, data):
+		return self.cryptor.update(data)
 
 class EchoCryptor(object):
 
 	def decrypt(self, data):
 		return data
+

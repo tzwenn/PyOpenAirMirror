@@ -1,5 +1,5 @@
 biplist
 pybonjour
-pycrypto
+cryptography
 pygame
 pysdl2
