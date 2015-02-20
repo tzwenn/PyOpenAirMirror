@@ -40,9 +40,14 @@ try:
 except ImportError:
 	pass
 else:
+	import ctypes
+
 	class SDL2Renderer(FrameSink):
 
 		cmdLineKey = "sdl2"
+
+		def __c(self, s):
+			return ctypes.cast(ctypes.create_string_buffer(s, len(s)), ctypes.POINTER(ctypes.c_ubyte))
 
 		def start(self):
 			sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO)
@@ -52,7 +57,10 @@ else:
 			if self.window is None:
 				self.setupWindow(frame.width, frame.height)
 
-			sdl2.SDL_UpdateTexture(self.texture, None, "%s%s%s" % (frame.y, frame.v, frame.u), frame.width) 
+			sdl2.SDL_UpdateYUVTexture(self.texture, None,
+					self.__c(frame.y), frame.width,
+					self.__c(frame.u), frame.width / 2,
+					self.__c(frame.v), frame.width / 2)
 			sdl2.render.SDL_RenderClear(self.renderer)
 			sdl2.render.SDL_RenderCopy(self.renderer, self.texture, None, None)
 			sdl2.render.SDL_RenderPresent(self.renderer)
