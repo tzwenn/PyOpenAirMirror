@@ -6,6 +6,7 @@ What's not open is the drm handshake (fairplay sap), on starting a connection. I
 
 ## What you need
 - Python 2.7
+- sdl2 (and pysdl2)
 - OS X 10.8+ running on an x86_64 processor (this does not need to be the system you are mirroring too).
 - ffmpeg or libav development files installed
 
@@ -16,26 +17,28 @@ After cloning the repository, you need to load and compile the [pyh264decode sub
 $ git submodule init
 $ git submodule update
 $ (cd h264decode; ./setup.py build)
-$ ln -s h264decode/build/lib.*/h264decode.so .
+$ ln -s h264decode/build/lib.*/h264decode*.so .
 $ pip install -r requirements.txt
 ```
 
+Note: pygame is an optional dependency.
+
 ## Running
 
-Just run ```main.py```. If you are on 64bit OS X for the first time it will automatically offer you to download some binary fairplay library (check out ```fply/get_libfply.sh``` if you want to do it manually). Your computer will show up as "OpenAirMirror" on your iDevice's mirroring list.
+Just run ```main.py```. If you are on 64bit OS X it will automatically offer you to download some binary fairplay library (check out ```fply/get_libfply.sh``` if you want to do it manually). Your computer will show up as "OpenAirMirror" on your iDevice's mirroring list.
 
-![sdl-sink](http://i.imgur.com/UX7jm5v.png)
+![sdl2-sink](http://i.imgur.com/y29QmIG.png)
 
 For a complete list of options see:
 
 ```
 $ ./main.py --help
-usage: main.py [-h] [--sink {sdl,pickle,yuv} [{sdl,pickle,yuv} ...]]
+usage: main.py [-h] [--sink {sdl2,pickle,pygame,yuv} [{sdl2,pickle,pygame,yuv} ...]]
                [--password PASSWORD] [--fply-server FPLY_SERVER]
                [name]
 ```
 
-By default the transmitted video will be displayed with pygame. You can select alternative sinks, like pickling all received frames or storing them without time info as raw YUV frames (which can be converted back to MP4 using the ```yuv2mp4.sh``` script).
+By default the transmitted video will be displayed with sdl2. You can select alternative sinks, like pygame (sdl1), pickling all received frames, or storing them without time info as raw YUV frames (which can be converted back to MP4 using the ```yuv2mp4.sh``` script).
 
 ## Known issues
 

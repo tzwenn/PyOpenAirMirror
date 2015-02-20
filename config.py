@@ -22,7 +22,7 @@ fplyServer = None
 #####################################################################
 
 import argparse
-import FrameSink
+import output.FrameSink
 
 args = None
 
@@ -32,8 +32,8 @@ def parseArguments():
 			            help="the name under which the service gets announced",
 						default=service_name)
 	parser.add_argument("--sink", "-s", nargs='+',
-						choices=FrameSink.availableSinks.keys(),
-						default=["sdl"],
+						choices=output.FrameSink.availableSinks.keys(),
+						default=["sdl2"],
 						help="What to do with received frames")
 	parser.add_argument("--password", "-p",
 						help="server's password (none if not provided)")
@@ -51,7 +51,13 @@ def applyArguments():
 	global fplyServer, fplyServerPort
 	service_name = args.name
 	password = args.password
-	selectedSinks = [FrameSink.availableSinks[key] for key in args.sink]
+	try:
+		selectedSinks = [output.FrameSink.availableSinks[key] for key in args.sink]
+	except KeyError, e:
+		import sys
+		sys.stderr.write("Cannot find sink %s. Have you installed all dependencies?\n" % e)
+		sys.exit(1)
+
 	fplyServer = args.fply_server
 	if fplyServer is not None and ':' in fplyServer:
 		fplyServer, _, fsp = fplyServer.rpartition(':')

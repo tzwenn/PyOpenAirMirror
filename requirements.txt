@@ -2,3 +2,4 @@ biplist
 pybonjour
 pycrypto
 pygame
+pysdl2

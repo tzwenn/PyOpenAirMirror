@@ -3,7 +3,6 @@ import socket
 import fply
 import config
 import h264decode
-import FrameSink
 
 import common.AirPlayHandler
 import mirror.Packet
