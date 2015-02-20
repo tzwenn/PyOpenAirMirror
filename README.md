@@ -33,12 +33,12 @@ For a complete list of options see:
 
 ```
 $ ./main.py --help
-usage: main.py [-h] [--sink {sdl2,pickle,pygame,yuv} [{sdl2,pickle,pygame,yuv} ...]]
+usage: main.py [-h] [--sink {sdl,pickle,yuv} [{sdl,pickle,yuv} ...]]
                [--password PASSWORD] [--fply-server FPLY_SERVER]
                [name]
 ```
 
-By default the transmitted video will be displayed with sdl2. You can select alternative sinks, like pygame (sdl1), pickling all received frames, or storing them without time info as raw YUV frames (which can be converted back to MP4 using the ```yuv2mp4.sh``` script).
+By default the transmitted video will be displayed with sdl2, with pygame (sdl1) as fallback. You can select alternative sinks, like pickling all received frames, or storing them without time info as raw YUV frames (which can be converted back to MP4 using the ```yuv2mp4.sh``` script).
 
 ## Known issues
 

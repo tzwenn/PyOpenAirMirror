@@ -33,7 +33,7 @@ def parseArguments():
 						default=service_name)
 	parser.add_argument("--sink", "-s", nargs='+',
 						choices=output.FrameSink.availableSinks.keys(),
-						default=["sdl2"],
+						default=["sdl"],
 						help="What to do with received frames")
 	parser.add_argument("--password", "-p",
 						help="server's password (none if not provided)")
