@@ -54,7 +54,7 @@ class MirrorService(common.AirPlayHandler.AirPlayHandler):
 	def closeConnection(self):
 		self.log_message("Closing connection")
 		self.close_connection = 1
-		self.frameHandlers = []
+		self.frameSinks = []
 
 	def parseStreamPacket(self):
 		try:
