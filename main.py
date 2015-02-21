@@ -1,26 +1,14 @@
 #!/usr/bin/env python
 
-import threading
-import BaseHTTPServer
-
+import config
 import common.register
-
-def runServer(port, handler):
-	try:
-		httpd = BaseHTTPServer.HTTPServer(('', port), handler)
-		httpd.serve_forever()
-	except KeyboardInterrupt:
-		pass
+import common.server
+import mirror.service
 
 def main():
-	register_thread = threading.Thread(target=common.register.registerAirPlay)
-	register_thread.setDaemon(True)
-	register_thread.start()
-
-	import mirror.service
-	runServer(7100, mirror.service.MirrorService)
+	register_thread = common.async(common.register.registerAirPlay)
+	common.server.run(7100, mirror.service.MirrorService)
 
 if __name__ == "__main__":
-	import config
 	config.parseArguments()
 	main()

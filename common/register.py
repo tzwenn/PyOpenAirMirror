@@ -31,3 +31,8 @@ def registerAirPlay(targetPort=7000):
 	finally:
 		sdRef.close()
 
+if __name__ == "__main__":
+	import sys
+	if len(sys.argv) > 1:
+		config.service_name = sys.argv[1]
+	registerAirPlay()
