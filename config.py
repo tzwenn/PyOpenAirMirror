@@ -1,7 +1,9 @@
-model = "OpenAirMirror0,1"
+model = "AppleTV3,1"
+rmodel = model
 
 server_name = "AirTunes"
 server_version = "150.33"
+rhd = "1.06.6"
 service_name = "OpenAirMirror"
 sdl_window_caption = service_name
 

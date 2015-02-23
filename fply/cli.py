@@ -54,4 +54,4 @@ class FPLY(FPLY_repl):
 
 	def read(self, length):
 		self.proc.stdout.flush()
-		self.proc.stroud.read(length)
+		return self.proc.stdout.read(length)
