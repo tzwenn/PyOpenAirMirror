@@ -1,12 +1,10 @@
 import SocketServer
 import BaseHTTPServer
 
-class AirPlayServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
+class AirPlayServer(BaseHTTPServer.HTTPServer):
 	pass
 
 def run(port, handler):
-	try:
-		httpd = AirPlayServer(('', port), handler)
-		httpd.serve_forever()
-	except KeyboardInterrupt:
-		pass
+	httpd = AirPlayServer(('', port), handler)
+	httpd.serve_forever()
+

@@ -1,6 +1,5 @@
 import socket
 
-import fply
 import config
 import h264decode
 
@@ -8,33 +7,18 @@ import common.AirPlayHandler
 import mirror.Packet
 import mirror.Cryptor
 
-class MirrorService(common.AirPlayHandler.AirPlayHandler):
-	server_version = "%s/%s" % (config.server_name, config.server_version)
+class MirrorService(common.AirPlayHandler.FPLYHandler):
 	protocol_version = "HTTP/1.1"
 	decoder_cls = h264decode.Decoder
-
-	def setup(self):
-		self.fply = fply.FPLY()
-		common.AirPlayHandler.AirPlayHandler.setup(self)
 
 	def do_GET(self):
 		if self.path == "/stream.xml" and self.checkAuth():
 			self.sendCapabilities()
 
 	def do_POST(self):
-		if self.path == "/fp-setup":
-			self.fpSetup()
-		elif self.path == "/stream":
+		common.AirPlayHandler.FPLYHandler.do_POST(self)
+		if self.path == "/stream":
 			self.receiveStream()
-
-	def fpSetup(self):
-		data = self.readBody()
-		if len(data) == 0x10:
-			answer = self.fply.phase1(data)
-		else:
-			answer = self.fply.phase2(data)
-		self.log_message("Sending FPLY answer of %d bytes" % len(answer))
-		self.sendContent(answer, "application/octet-stream", 32)
 
 	def receiveStream(self):
 		self.streamInfo = self.readPlist()
