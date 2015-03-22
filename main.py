@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
 import config
+
+if __name__ == "__main__":
+	config.parseArguments()
+
 import common.register
 import common.server
 import mirror.service
@@ -17,5 +21,4 @@ def main():
 		pass
 
 if __name__ == "__main__":
-	config.parseArguments()
 	main()
