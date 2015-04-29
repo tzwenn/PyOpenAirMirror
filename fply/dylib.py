@@ -51,10 +51,4 @@ def available(filename=defaultLibName):
 		else:
 			return False
 
-	try:
-		with open(filename, "rb") as f:
-			h = hashlib.sha1(f.read()).hexdigest()
-		return h == "ec3e7afe320ff37e44fc775072db8f25d78eba2e"
-	except:
-		return False
-
+	return True
