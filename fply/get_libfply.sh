@@ -7,7 +7,7 @@ else
 fi
 
 echo "Downloading DMG"
-curl http://d17kmd0va0f0mp.cloudfront.net/m360/mac/mirroring360_mac.dmg > m.dmg
+curl 'http://web.archive.org/web/20141010084109/http://d17kmd0va0f0mp.cloudfront.net/m360/mac/mirroring360_mac.dm' > m.dmg
 echo "Mounting"
 mkdir mirroring360
 hdiutil attach m.dmg -mountpoint mirroring360
