@@ -6,6 +6,7 @@ What's not open is the drm handshake (fairplay sap), on starting a connection. I
 
 ## What you need
 - Python 2.7
+- a source device running iOS 6-8
 - sdl2 (and pysdl2)
 - OS X 10.8+ running on an x86_64 processor (this does not need to be the system you are mirroring too).
 - ffmpeg or libav development files installed
